@@ -1,9 +1,9 @@
 <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="author" content="&quot;Tuyi&quot;">
 <meta name="layout" content="post">
 <meta name="header-mask" content="0.4">
-<meta name="date" content="2020-04-05 13:00:00">
+<meta name="date" content="2020-04-05 15:00:00">
 <meta name="header-img" content="&quot;img/post-bg-web.jpg&quot;">
-<meta name="subtitle" content="&quot;可解释的美学评分及图像剪裁&quot;">
+<meta name="subtitle" content="&quot;利用自组织记忆网络做弱监督图像分类&quot;">
 <meta name="tags" content=""><style>body {
   max-width: 980px;
   border: 1px solid #ddd;
@@ -1061,38 +1061,31 @@ body .markdown-body
 .codehilite .vi{color:teal}
 .codehilite .il{color:#009999}
 .codehilite .gc{color:#999;background-color:#EAF2F5}
-</style><title>"ASM-Net"</title></head><body><article class="markdown-body"><ul>
+</style><title>"CVPR20: SOMNet"</title></head><body><article class="markdown-body"><ul>
 <li>Computer Vision</li>
 <li>Aesthetic Cropping</li>
 </ul>
 <hr />
-<p><a href="https://mp.weixin.qq.com/s?__biz=MzA5ODEzMjIyMA==&amp;mid=2247495789&amp;idx=1&amp;sn=81d55199cd4bf97942d87b6f86719269&amp;chksm=9094f9fea7e370e847110bff33c582beb5aaff8479f3135632a4188c532cf6c87a14c700b8f8&amp;mpshare=1&amp;scene=1&amp;srcid=04052uizvkweZc3zoIC91o88&amp;sharer_sharetime=1586063973416&amp;sharer_shareid=6d4fd8f476860e5adfc7149621b4b8ea#rd">原文链接</a></p>
-<p>基于美学的图像裁剪（aesthetic image cropping）的目标是在一张图片中找到具有最高美学评价的子图。</p>
-<p>在本篇论文中，我们提出了一个新颖的图像裁剪模型来解决这个问题。对于每张图片，我们使用一个全卷积网络来生成一个同时对照片构图（photo composition）和物体显著性（object saliency）敏感的美学评分图（aesthetic score map），并让其所有候选子图都使用其进行美学评分。</p>
-<p>该美学评分图可以用来定位图像中具有较高美学价值的区域，并帮助分析模型所学习到的构图规则。因此，我们的模型可以揭示美学评价的内在机理，具有良好的可解释性。我们在多个数据集上证明了本模型的优越性能，并展示了它的广泛应用场景。</p>
-<p>本文已被AAAI20接收（<a href="https://arxiv.org/abs/1911.10492">论文链接</a>）。</p>
-<h4 id="_1">模型概述<a class="headerlink" href="#_1" title="Permanent link"></a></h4>
-<p>为了找到最佳子图，图像裁剪模型一般会先生成大量的候选子图，然后对每张子图逐个进行美学评分，最终确定评分最高的子图。因此，一般来说，图像裁剪模型通常由候选子图生成模型和美学评分模型两个部分组成。早期的研究通过利用一些摄影知识来实现美学评分，比如使用人类总结的构图规则，像是三分法和中心法则。它们通过定义并抽取相应的特征来衡量子图的构图优劣。</p>
-<p><img alt="image" src="/img/AIC/composition-rules.png" /></p>
-<p>随着深度学习技术的发展，很多人开始以数据驱动的方式研究这个问题，收集并标注了许多美学数据集来学习人类的审美偏好。他们直接通过深度学习模型来学习并预测美学评分，并取得了不错的进展，但这类方法往往缺乏对美学评分机理的揭示与阐述。</p>
-<p>我们认为，一个好的图像裁剪需要两步：首先是选定图片中最重要的内容，然后是把它放在一个构图最优的位置。所以本问题所需的知识可以分为两部分，即对内容的偏好（content preference）和对构图的偏好（composition preference）。因此，一个好的图像裁剪模型应该能够在从标注数据中同时学习这两种知识，并且能够在推荐最佳子图时利用它们。 </p>
-<p><img alt="image" src="/img/AIC/model.png" /></p>
-<p>为此，我们设计出了一个新颖的图像裁剪模型，ASM-Net。给定一张图片，ASM-Net首先会生成一张美学评分图（aesthetic score map）。这张图能够通过池化的方式来对任意子图给出一个对应美学评分。在训练时时，我们将标注过的子图的评分预测排序作为监督信息，用排序损失（ranking loss）训练模型；在测试时，我们对所有候选子图分别计算美学评分，将最高分子图作为最终剪裁结果。此外，我们还利用了视觉显著性（visual saliency）对模型进行了约束，使得它会更关注显著区域的构图效果。</p>
-<h4 id="composition-aware-aesthetic-score-map">Composition-Aware Aesthetic Score Map<a class="headerlink" href="#composition-aware-aesthetic-score-map" title="Permanent link"></a></h4>
-<p>受到Class Activation Map 模型的启发，我们首先使用全卷积网络对每张图片生成一个等大小的美学评分图。我们期望评分图上每一处的分值能够反映图片对应区域的美学重要性，进而能够把子图的平均分当作其美学评分。然而我们发现，因为美学评分问题本身的复杂性，这种设计并不能满足我们的需要。为此，我们需要让美学评分图具有更多的变化，比如对构图敏感。</p>
-<p>受摄影构图规则的启发，我们认识到一个被拍摄物体在图片内的相对位置对其图片的美学评分很重要。比如，在中心法则中，我们总是将被拍摄物体放在中心位置，以实现一种对称和平衡的美感。因此，被拍摄物体位于一个子图中心时的美学评分应该大于它偏离中心时的评分。因此，我们认识到图片中每个区域在美学评分图上的审美分数应该随着其在不同子图中的相对位置发生变化。</p>
-<p><img alt="image" src="/img/AIC/composition-pattern.png" /></p>
-<p>为了实现这个目标，我们首先预设一些构图模板（composition pattern）。每个构图模板都能够将一个子图划分若干不重叠的相对位置，称之为构图分区（composition partition）。</p>
-<p>给定一个构图模板，图片中每个部分的美学评分就要由它在每个子图中的相对位置，即构图分区决定。假设我们有九个构图分区，那么图片中每个部分的美学评分就一共有九种取值，取决于它在不同子图中所处的构图分区是否合适。这样，图片的每个区域不再由单个美学评分而是对构图分区敏感的一组评分表示。因此，我们的模型在学习标注数据的时候，不仅能够学习到图片中每个区域的总体审美偏好，还能够学习到它们出现在不同子图、处在不同构图分区时的审美偏好。</p>
-<h4 id="saliency-aware-aesthetic-score-map">Saliency-Aware Aesthetic Score Map<a class="headerlink" href="#saliency-aware-aesthetic-score-map" title="Permanent link"></a></h4>
-<p>视觉显著性是一种使物体吸引更多人类注意力的感知特性。一般来说，一张图片中具有较高视觉显著性的区域与图片中最重要的内容有很大的关联。因此，在图像裁剪问题中，我们可以利用视觉显著性来保护最要的重要内容不被剪裁掉。一些以前的方法已经在这个方向上做过一些尝试，它们的假设是：视觉显著性最高的区域或者显著物体（salient object），就是对应着图片中最重要的内容。在这个假设的前提下,它们生成的候选子图都一定会覆盖显著物体，这样最终预测的最佳子图就一定不会裁减掉重要内容。</p>
-<p>然而，我们认为这样的假设有几个局限性。首先，许多现实世界的图像，比如一张聚会照片，可能有多个显著的区域，我们不能只关注最显著的一个。其次，一些照片，比如风景照，可能没有任何显著的物体，这可能导致上述方法失效。第三，显著的物体也可能是一个干扰物体，应该排除而不是包含在最优子图中。因此，在我们的方法中，我们采用了一个更合理的假设：图片中的显著区域应该对其构图分区更敏感的。这是因为显著的区域会吸引更多的注意力，所以它们的构图分区更加影响人们对子图的美学评价。为此，为了实现这一假设，我们设计了一种基于显著性损失函数。它通过让我们的模型对显著区域对美学评分更加敏感，使得模型在学习过程中更加关注显著物体应该放在子图的哪个构图分区。</p>
+<p>原文链接: <a href="https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&amp;mid=2650782227&amp;idx=3&amp;sn=237e9fd8d5fba03cfaab645052fc2e18&amp;chksm=871a7e6db06df77bcc657eb347d022f2f5cc6685427b726d8f97b3caa18dea6d85d30610da54&amp;mpshare=1&amp;scene=1&amp;srcid=&amp;sharer_sharetime=1586063954500&amp;sharer_shareid=6d4fd8f476860e5adfc7149621b4b8ea#rd">CVPR 2020 | 弱监督怎样做图像分类？上交大提出自组织记忆网络</a></p>
+<p>在这篇论文中，研究者利用网络数据研究图像分类任务 (image classification)。他们发现网络图片 (web image) 通常包含两种噪声，即标签噪声 (label noise) 和背景噪声 (background noise)。前者是因为当使用类别名 (category name) 作为关键字来爬取网络图像时，在搜索结果中可能会出现不属于该类别的图片。后者则是因为网络图片的内容与来源非常多样，导致抓取的图片往往包含比标准的图像分类数据集更多的无关背景信息。在下图中的两张图片均用关键字「狗」抓取。左边图片的内容是狗粮而不是狗，属于标签噪声；右边的图像中，草原占据了整个图像的大部分，同时小孩子也占据了比狗更为显著的位置，属于背景噪声。</p>
+<p><img alt="image" src="/img/WSL/noise.png" /></p>
+<p>这两种噪声给利用网络数据学习图像分类器带来了很多额外的困难，而现有的方法要么非常依赖于额外的监督信息，要么无法应对背景噪声。论文中提出了一种不需要额外监督信息的方法来同时处理这两种类型的噪声，并在四个基准数据集上的实验证明了方法的有效性。本文已被 CVPR2020 接收(<a href="https://arxiv.org/abs/1906.12028">论文地址</a>).</p>
+<h4 id="_1">方法概述<a class="headerlink" href="#_1" title="Permanent link"></a></h4>
+<p>论文的方法方法建立在多实例学习 (Multi-Instance Learning) 的框架下的。在训练分类器前，首先使用一种无监督的 proposal 提取方法 EdgeBox 来从每张网络图片中提取大量的 proposal，并使用 ROI(Region Of Interest) 来同时指代图片和其 proposal。按照多实例学习的理念，研究者将每个 ROI 当做一个实例 (instance)，并将若干相同类别图片的所有 ROI 组成一个具有 multi-Instance 的 bag。在训练时，使用 bag-leve 表征，即 ROI-level 表征的加权和，来训练图像分类器。由于每个 bag 都有较大概率拥有干净的 ROI，可以通过对 ROI 赋予不同的权值，来使得其 bag-level 表征具有更少的标签噪声和背景噪声，从而得到一个更好的图像分类器。</p>
+<p>为了给 ROI 赋予合适的权重，研究者设计了一种新颖的自组织记忆模块（Self-organizing Memory Module）。通过自组织记忆模块聚类得到每个图像类别中最具有区分性 (discriminativeness) 和代表性 (representativeness) 的表征，并通过每个 ROI 与这些表征的关系来调整其权重。方法整个框架如下图所示：</p>
+<p><img alt="image" src="/img/WSL/model.png" /></p>
+<h4 id="self-organizing-memory-module">Self-Organizing Memory Module<a class="headerlink" href="#self-organizing-memory-module" title="Permanent link"></a></h4>
+<p>自组织记忆模块的主要功能是为每个 bag 内的 ROI 赋予合适权重，从而让 bag-level 表征更接近于不含噪声的图片。它的原理是通过对所有 bag-level 表征进行聚类，从而找到每个类别的若干聚类中心（clustering center），再利用这些聚类中心调整其最接近的 ROI 的权重。虽然一些传统的聚类方法，比如 K-means，也可以实现类似的功能，但是我们设计的自组织记忆模块更加灵活和强大。它不仅可以集成带端到端的训练系统中，同时还能存储和更新一些有用的信息作为辅助。</p>
+<p>具体来说，自组织记忆模块由 key slot 和 value slot 组成。其中，key slot 用于储存聚类中心的表征，而 value slot 则储存了 key slot 对于每个类别的 discriminative score（d-score）和 representative score（r-score）。在某个类别上的 d-score 和 r-score 越高，则表明该 key slot 对这个类别具有较大的区分性和代表性。</p>
+<p>使用自组织记忆模块时，我们首先找到一个 bag 中每个 ROI 最接近的 key slot（winner slot），再用 winner slot 对 bag 所在类别的 d-score 和 r-score 来调整其中 ROI 的权重，从而改善 bag-level 表征，使其更接近于干净的图片表征。接着，改善后的 bag-level 表征又能够重新帮助学习得到更好的 key slot 和 value slot。</p>
+<p>受到 self-organizing map (SOM) 的启发, 研究者还在 key slot 上设计了一个邻域约束来让自组织记忆模块对初始化不敏感，并能产生比较平衡的聚类结果，因此把使用的记忆模块命名为 self-organizing memory module (自组织记忆模块)。</p>
+<p><img alt="image" src="/img/WSL/som.png" /></p>
 <h4 id="_2">实验与可视化结果<a class="headerlink" href="#_2" title="Permanent link"></a></h4>
-<p>我们的模型在三个基准数据集上做了大量的实验，并使用了多种指标对结果进行了比较。实验我们模型的性能优于最先进的方法，并具有良好的通用性。除了定量结果，我们也提供了大量的可视化结果。 </p>
-<p><img alt="image" src="/img/AIC/crop-feature.png" /></p>
-<p>首先我们对比来自训练集中同一张图片的三个不同子图的美学评分。黑色数字表示其的标注评分，红色数字表明了其预测评分。可以看到，子图的预测评分的相对大小关系与标注评分是一致的，这表明了模型通过使用ranking loss学习到了训练数据集中的美学评分偏好。进一步，预测评分下的热力图表明了子图中每个区域的预测评分，而预测评分则是整个热力图的均值。前两个子图中有重叠的区域，然而其预测评分却不一样，这是因为重叠区域在两个子图中的构图分区不一样。第三个图的预测评分很低，这是因为它没有捕捉到整个图片中最显著的物体，信号灯。上述结果表明了我们的模型确实是同时考虑了构图分区和物体显著性的。</p>
-<p><img alt="image" src="/img/AIC/cropping-results.png" /></p>
-<p>其次，我们对三类图片展示最优裁剪结果: 有一个显著的物体、有多个显著物体和没有显著物体。对于每一类，我们展示两张图片在五个长宽比（9:16、3:4、1:1、4:3和16:9）下的最优剪裁结果。在第三类没有显著物体的图片中，之前的基于显著性的方法可能会失效，因为它们依赖于显著物体的检测结果；然而我们的模型仍然可以达到令人满意的结果。这表明了我们模型的泛用性。</p>
-<p>最后，我们还发现我们的模型可以用于对任意形状的子图进行美学评分。这里，我们尝试将矩形的图像裁剪任务扩展为圆形的裁剪，因为它有一些实际应用场景，比如生成圆形的用户头像。在上图中，圆形的剪裁结果也表明了我们模型的拓展性，也证明我们的模型学习到了可以在不同形状的子图之间通用的美学评价知识。<a href="http://bcmi.sjtu.edu.cn/home/niuli/paper/AIC_Supplementary.pdf">点击查看更多可视化结果</a>。</p>
+<p>这一模型在四个基准数据集上做了大量的实验，实验结果表明，模型具有显著的优越性。除了定量结果，团队也提供了深入的定性分析。</p>
+<p><img alt="image" src="/img/WSL/prototypes.png" /></p>
+<p>以 Clothing1M 数据集为例，对西装（Suit）这个类别可视化了其中三个 key slot。每个饼图显示对应 key slot 在 14 个类别上的 d-scores，和其在西装类别上的 r-score。同时论文也展示了与每个 key slot 余弦相似度（cosine similarity）最高的 5 个 ROI。</p>
+<p>如饼状图所示，第一个 key slot 的 d-score 最低，因为它同时包含了很多西装和风衣（Windbreaker）的 bag，所以对西装的区分性不是很大。与此同时，其属于西装的 bag 也比其他两个 key slot 的少，不具有代表性，所以 r-score 也是最低的。也就是说，第一个 key slot 对西装这个类别即不具有区分性，也不具有代表性。相较之下，后两个 key slot 有比较高的 d-score，因为它们分别代表了不同的颜色的西装，即彩色西装和深色西装。另外，因为该数据集中彩色西装比深色西装要少，所以第三个 key slot 比第二个更能代表西装这个类别，因此其对应的 r-score 也更高。</p>
+<p><img alt="image" src="/img/WSL/visualization.png" /></p>
+<p>为了进一步展示自组织记忆模块的特性，研究者还在 Clothing1M 上用可视化了所有 key slot 的 d-scores。通过饼状图可以看到，同一个类别的 bag 在 key slot 的空间中是聚集在一起的。此外，他们还用柱状图分别展示了所有 key slot 在毛衣（Sweater）和西装两类上的 r-score。可以看到，这两类别的 bag 也占据了不同区域的 key slot，表明了我们方法的聚类结果具有非常合理的结构。</p>
 <h4 id="_3">总结<a class="headerlink" href="#_3" title="Permanent link"></a></h4>
-<p>在本文中，我们提出了一个全新的图像裁剪模型。对于每一张待剪裁图片，我们的模型可以生成一个对构图分区和视觉显著性都很敏感的美学评分图。我们的模型可以学会将重要的的图片内容放在最恰当的子图位置，以剪裁得到美学评分最高的子图。我们的模型在大量实验上证明了其拥有最好的性能，并在实际应用中表现出良好的通用性和拓展性。我们的研究方法也对揭开美学评价的内在机理做出了贡献。</p></article></body></html>
+<p>在本文中，在多实例学习的框架下，研究者设计了一种自组织记忆模块来同时解决网络图片中的标签噪声和背景噪声问题，并在图像分类实验中取得了优异的结果。通过丰富的可视化结果表明了方法的有效性，并帮助了解了聚类结果的内部结构。</p></article></body></html>
