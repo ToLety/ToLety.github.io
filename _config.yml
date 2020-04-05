@@ -3,10 +3,10 @@ title: Tuyi's Blog
 SEOTitle: 涂逸的博客 | Tuyi's Blog
 header-img: img/tag-bg.jpg
 email: tuyi1991@sjtu.edu.com
-description: 而世之奇伟、瑰怪，非常之观，常在于险远
-keyword: Computer Vision, Financial Technology, Causal Inference
-url: tolety.github.io              # your host, for absolute URL
-#baseurl: ""                             # for example, '/blog' if your blog hosted on 'host/blog'
+description: ""
+keyword: "Computer Vision, Financial Technology, Causal Inference"
+url: "tolety.github.io"              # your host, for absolute URL
+baseurl: ""                             # for example, '/blog' if your blog hosted on 'host/blog'
 
 # Publish posts or collection documents with a future date.
 future: true
